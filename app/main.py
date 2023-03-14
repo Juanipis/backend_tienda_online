@@ -8,7 +8,7 @@ from pydantic import BaseModel
 import psycopg2
 from pydantic import BaseSettings
 #Now we import the router from the auth.py file
-from routers import auth
+from .routers import auth
 
 
 app = FastAPI()

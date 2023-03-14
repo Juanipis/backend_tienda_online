@@ -13,17 +13,17 @@ from fastapi import APIRouter, Depends, HTTPException
 router = APIRouter()
 
 class Settings(BaseSettings):
-    dbname: str
-    userdb: str
-    passworddb: str
-    hostdb: str
-    portdb: int
-    secret_key: str
-    algorithm: str
-    acces_token_expire_minutes: int
+    dbname: str = "test_db"
+    userdb: str = "root"
+    passworddb: str = "root"
+    hostdb: str = "postgres"
+    portdb: int = 5432
+    secret_key: str = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+    algorithm: str = "HS256"
+    acces_token_expire_minutes: int = 30
 
-    class Config:
-        env_file = "../.env"
+    #class Config:
+    #    env_file = "../.env"
 
 settings = Settings()
 
