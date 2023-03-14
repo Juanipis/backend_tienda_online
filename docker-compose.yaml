@@ -1,12 +1,14 @@
 services:
 
   backend:
-    build: .
+    image: juanipis/backostgres
     container_name: backend
     ports:
       - "8000:8000"
     depends_on:
       - postgres
+    env_file:
+      - ./backendVars.env
 
   postgres:
     container_name: postgres
@@ -14,10 +16,8 @@ services:
     restart: always
     ports:
       - "5432:5432"
-    environment:
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=root
-      - POSTGRES_DB=test_db
+    env_file:
+      - ./postgresVars.env
     volumes:
       - ./sql/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
       - ./sql/fill_tables.sql:/docker-entrypoint-initdb.d/fill_tables.sql
@@ -25,9 +25,8 @@ services:
   pgadmin:
     container_name: pgadmin
     image: dpage/pgadmin4
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=test@test.com
-      - PGADMIN_DEFAULT_PASSWORD=test
+    env_file:
+      - ./pgadminVars.env
     ports:
       - "5050:80"
     depends_on:
