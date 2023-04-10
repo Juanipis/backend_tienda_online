@@ -8,14 +8,13 @@ from pydantic import BaseModel
 import psycopg2
 from pydantic import BaseSettings
 #Now we import the router from the auth.py file
-from .routers import auth
-
+from routers import auth, register
 
 app = FastAPI()
 
 #We add the router to the app with the prefix /auth and the tags
 app.include_router(auth.router)
-
+app.include_router(register.router)
 
 
 @app.get("/")

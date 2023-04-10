@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from datetime import datetime, timedelta
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -9,6 +9,7 @@ from pydantic import BaseModel
 import psycopg2
 from pydantic import BaseSettings
 from fastapi import APIRouter, Depends, HTTPException
+from typing import Annotated
 
 router = APIRouter()
 
@@ -23,7 +24,7 @@ class Settings(BaseSettings):
     acces_token_expire_minutes: int 
 
     class Config:
-        env_file = "env.env"
+        env_file = "./env.env"
 
 settings = Settings()
 
@@ -54,7 +55,7 @@ class TokenData(BaseModel):
 
 class User(BaseModel):
     email: str | None = None
-
+    disabled: bool | None = None
 
 class UserInDB(User):
     hashed_password: str
@@ -72,10 +73,11 @@ def get_password_hash(password):
 def get_user(username: str):
     try:
         with conexion.cursor() as cursor:
-            cursor.execute(f'select email,hashed_password from users where email=\'{username}\';')
+            cursor.execute(f'select email,hashed_password,disabled from users where email=\'{username}\';')
             email_db = cursor.fetchone()
             if(email_db != None):
-                return UserInDB(email=email_db[0],hashed_password=email_db[1])
+                print(email_db)
+                return UserInDB(email=email_db[0],hashed_password=email_db[1],disabled=email_db[2])
             else:
                 return None
     except psycopg2.Error as e:
@@ -103,7 +105,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme)):
+async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -123,16 +125,15 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     return user
 
 
-async def get_current_active_user(current_user: User = Depends(get_current_user)):
-    if current_user.email is None:
+async def get_current_active_user( current_user: Annotated[User, Depends(get_current_user)]):
+    if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
 #We add the router to the app with the prefix /auth and the tags
 @router.post("/token", response_model=Token,tags=["auth"])
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
     user = authenticate_user(form_data.username, form_data.password)
-    print(type(user))
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -146,7 +147,14 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-
-@router.get("/users/me/", response_model=User, tags=["auth"])
-async def read_users_me(current_user: User = Depends(get_current_active_user)):
+@router.get("/users/me/", response_model=User)
+async def read_users_me(
+    current_user: Annotated[User, Depends(get_current_active_user)]
+):
     return current_user
+
+@router.get("/users/me/items/")
+async def read_own_items(
+    current_user: Annotated[User, Depends(get_current_active_user)]
+):
+    return [{"item_id": "Foo", "owner": current_user.email}]
