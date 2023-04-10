@@ -9,7 +9,7 @@ CREATE OR REPLACE FUNCTION insert_user(
   p_email varchar(100),
   p_hashed_password varchar(60),
   p_disabled bool DEFAULT true
-	p_verification_code varchar(6)
+	p_verification_code varchar(60)
 ) RETURNS BOOLEAN AS $$
 DECLARE
   success BOOLEAN := FALSE;
@@ -25,3 +25,30 @@ BEGIN
   RETURN success;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE FUNCTION verificarTokenRegistro(varchar(64))
+	returns boolean
+AS $$
+DECLARE
+	token varchar(64);
+	user_found boolean;
+BEGIN
+	token:= $1;
+	 IF EXISTS(SELECT * FROM users WHERE verification_code = token) THEN
+        user_found := true;
+    ELSE
+        user_found := false;
+    END IF;
+	return user_found;
+END $$ LANGUAGE plpgsql;
+
+CREATE FUNCTION activarusuario(varchar(64))
+	returns boolean
+AS $$
+DECLARE
+	token varchar(64);
+BEGIN
+	token:= $1;
+	UPDATE users SET disabled = false WHERE verification_code = token;
+	return true;
+END $$ LANGUAGE plpgsql;

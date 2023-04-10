@@ -22,7 +22,8 @@ class Settings(BaseSettings):
     secret_key: str
     algorithm: str 
     acces_token_expire_minutes: int 
-
+    mail_sender: str
+    mail_password: str
     class Config:
         env_file = "./env.env"
 

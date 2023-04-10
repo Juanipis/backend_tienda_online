@@ -8,6 +8,10 @@ import random
 import string
 import psycopg2
 from datetime import datetime, timedelta
+from random import randbytes
+import hashlib
+import smtplib 
+from email.message import EmailMessage
 
 from routers.auth import Settings, Token, create_access_token
 
@@ -44,12 +48,10 @@ def get_password_hash(password):
 def is_password_secure(password: str):
     return bool(re.match(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!#%*?&]{8,20}$', password))
 
-def email_verification_code(length=6):
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
-  
 
 
-@router.post("/register", response_model=Token, tags=["auth"])
+
+@router.post("/register", tags=["auth"])
 async def register(user: User):
     try:
         with conexion.cursor() as cursor:
@@ -65,21 +67,25 @@ async def register(user: User):
 
             # Hash password and generate verification code
             hashed_password = get_password_hash(user.password)
-            verification_code = email_verification_code()
-
+            token = randbytes(10)
+            hashedCode = hashlib.sha256()
+            hashedCode.update(token)
+            verification_code = hashedCode.hexdigest()
             # Add user to database
-            cursor.execute(f"SELECT insert_user('{user.email}, '{hashed_password}', '{verification_code}', false);")
+            cursor.execute(f"SELECT insert_user('{user.email}','{hashed_password}',true,'{verification_code}');")
             conexion.commit()
-            # Send email with verification link
-            # code here
             
-            print(f"Verification code: {verification_code}")
-
-            # Create access token
-            access_token_expires = timedelta(minutes=settings.acces_token_expire_minutes)
-            access_token = create_access_token(data={"sub": user.email}, expires_delta=access_token_expires)
-
-            return {"access_token": access_token, "token_type": "bearer"}
+            # Send verification email
+            email = EmailMessage()
+            email["From"] = settings.mail_sender
+            email["To"] = user.email
+            email["Subject"] = "Verificacion de cuenta"
+            email.set_content(f"El link de verificacion de su cuenta:localhost:8000/verify-email?token={verification_code}")
+            smtp = smtplib.SMTP_SSL("smtp.gmail.com")
+            smtp.login(settings.mail_sender, settings.mail_password)
+            smtp.sendmail(settings.mail_sender, user.email, email.as_string())
+            smtp.quit()
+            return {"Usuario creado con exito, revise su correo para verificar su cuenta"}
 
     except psycopg2.Error as e:
         print("Ocurrió un error al conectar a PostgreSQL: ", e)
@@ -88,23 +94,17 @@ async def register(user: User):
 
 @router.post("/verify-email")
 async def verify_email(token: str):
-    # Decodificamos el token
-    try:
-        payload = JWTError.decode(token, settings.secret_key, algorithms=[settings.algorithm])
-        email: str = payload.get("sub")
-        if email is None:
-            raise JWTError
-    except JWTError:
-        raise HTTPException(status_code=400, detail="Token inválido o expirado")
-
     # Buscamos al usuario en la base de datos
     try:
         with conexion.cursor() as cursor:
-            cursor.execute(f"SELECT email FROM users WHERE email='{email}'")
-            email = cursor.fetchone()[0]
-            cursor.execute(f"UPDATE users SET disabled=false WHERE email={email}")
+            cursor.execute(f"SELECT verificarTokenRegistro('{token}')")
+            verify = cursor.fetchone()[0]
             conexion.commit()
-            return {"message": "Email verificado correctamente"}
+            if verify:
+                cursor.execute(f"SELECT activarusuario('{token}')")
+                return {"message": "Usuario verificado correctamente"}
+            else:
+                raise HTTPException(status_code=401, detail="Codigo de verificacion incorrecto o vencido")
     except psycopg2.Error as e:
         print("Ocurrió un error al conectar a PostgreSQL: ", e)
         raise HTTPException(status_code=500, detail="Error al actualizar usuario en la base de datos")
