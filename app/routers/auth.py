@@ -83,21 +83,23 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    user = get_user(username=token_data.username)
+    user = get_user(email=token_data.username)
     if user is None:
         raise credentials_exception
     return user
 
 
 async def get_current_active_user( current_user: Annotated[User, Depends(get_current_user)]):
-    if current_user.disabled:
+    if current_user.enabled == False:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
 #We add the router to the app with the prefix /auth and the tags
 @router.post("/token", response_model=Token,tags=["auth"])
-async def login_for_access_token(form_data: Annotated[Login, Depends()]):
-    user = authenticate_user(form_data.email, form_data.password)
+async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
+    print(form_data.username)
+    print(form_data.password)
+    user = authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

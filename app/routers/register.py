@@ -122,10 +122,11 @@ async def verify_email(token: str):
     try:
         with conexion.cursor() as cursor:
             cursor.execute(f"SELECT verificarTokenRegistro('{token}')")
-            verify = cursor.fetchone()[0]
             conexion.commit()
+            verify = cursor.fetchone()[0]
             if verify:
                 cursor.execute(f"SELECT activarusuario('{token}')")
+                conexion.commit()
                 return {"message": "Usuario verificado correctamente"}
             else:
                 raise HTTPException(status_code=401, detail="Codigo de verificacion incorrecto o vencido")
