@@ -7,7 +7,7 @@ from random import randbytes
 import hashlib
 import smtplib 
 from email.message import EmailMessage
-from routers.config import conexion, configuraciones
+from app.routers.config import conexion, configuraciones
 from typing import Annotated
 
 router = APIRouter()
@@ -73,7 +73,7 @@ async def registerPersona(form_data: Annotated[Persona, Depends()]):
             email["From"] = configuraciones.mail_sender
             email["To"] = form_data.email
             email["Subject"] = "Verificacion de cuenta"
-            email.set_content(f"El link de verificacion de su cuenta: http://{configuraciones.api_url}:{configuraciones.api_port}/verify-email?token={verification_code}")
+            email.set_content(f"El link de verificacion de su cuenta: https://{configuraciones.api_url}:{configuraciones.api_port}/verify-email?token={verification_code}")
             send_verification_mail(form_data.email, email)
             return {"Usuario creado con exito, revise su correo para verificar su cuenta"}
 
@@ -106,7 +106,7 @@ async def registerEmpresa(form_data: Annotated[Empresa, Depends()]):
             email["From"] = configuraciones.mail_sender
             email["To"] = form_data.email
             email["Subject"] = "Verificacion de cuenta"
-            email.set_content(f"El link de verificacion de su cuenta: http://{configuraciones.api_url}:{configuraciones.api_port}/verify-email?token={verification_code}")
+            email.set_content(f"El link de verificacion de su cuenta: https://{configuraciones.api_url}:{configuraciones.api_port}/verify-email?token={verification_code}")
             send_verification_mail(form_data.email, email)
             return {"Usuario creado con exito, revise su correo para verificar su cuenta"}
 

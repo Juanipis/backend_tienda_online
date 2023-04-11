@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 #Now we import the router from the auth.py file
-from routers import auth, register
+from app.routers import auth, register
 
 app = FastAPI()
 

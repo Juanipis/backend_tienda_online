@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     mail_sender: str
     mail_password: str
     class Config:
-        env_file = "./env.env"
+        env_file = ".env"
 
 configuraciones = Settings()
 

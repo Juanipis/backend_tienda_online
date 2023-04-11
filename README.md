@@ -17,43 +17,21 @@ _Backend necesario para una tienda online_
 #### Despliegue 🔌
 En la carpeta raíz es necesario un archivo tres archivos distintos .env que contenga las siguientes variables de entorno:
 ```
-Para backendVars.env
-dbname=yours_db_name
-userdb=yours_user_db
-passworddb=yours_password_db
-hostdb=yours_host_db
-portdb=yours_port_db
+dbname=
+userdb=
+passworddb=
+hostdb=
+portdb=
+secret_key=
+algorithm=
+acces_token_expire_minutes=
+api_url=
+api_port=
+mail_sender=
+mail_password=
 ```
 ```
-Para postgresVars.env
-POSTGRES_USER=yours_user_db
-POSTGRES_PASSWORD=yours_password_db
-POSTGRES_DB=yours_db_name
+uvicorn app.main:app --reload --ssl-keyfile "ruta.pem" --ssl-certfile "ruta.pem"
 ```
-```
-Para pgadminVars.env (cuando se despliegue es importante eliminar)
-PGADMIN_DEFAULT_EMAIL=yours_email
-PGADMIN_DEFAULT_PASSWORD=yours_password
-```
-
-Se recomienda cambiar los valores. Esta una app basada en contenedores, para desplegarla en local una opción es:\
-Primero se crea la imagen del backed que se usará en el docker-compose
-```
-docker build -t <nombre>/<etiqueta> .
-```
-Luego se despliega el docker-compose (el -d es para que se ejecute en segundo plano)
-```
-docker compose up -d
-```
-Si se hacen cambios en el código se debe reconstruir la imagen y luego reiniciar el contenedor
-```
-docker compose up -d --build
-```
-En caso de que nada funcione se puede eliminar el contenedor y volver a crearlo
-```
-docker-compose down
-docker compose up  --force-recreate
-```
-
 #### Autores ✏
 👨‍💻 Juan Pablo Díaz Correa - [@Juanipis](https://github.com/Juanipis) - juanipis@gmail.com
