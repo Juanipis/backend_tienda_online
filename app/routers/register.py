@@ -1,46 +1,33 @@
-# -- ./routers/register.py --
-from fastapi import APIRouter, Depends, HTTPException, status
-from jose import JWTError
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, EmailStr
 from passlib.context import CryptContext
 import re
-import random
-import string
 import psycopg2
-from datetime import datetime, timedelta
 from random import randbytes
 import hashlib
 import smtplib 
 from email.message import EmailMessage
-
-from routers.auth import Settings, Token, create_access_token
+from routers.config import conexion, configuraciones
+from typing import Annotated
 
 router = APIRouter()
-
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-settings = Settings()
-
-
-try:
-    credenciales = {
-        "dbname": settings.dbname,
-        "user": settings.userdb,
-        "password": settings.passworddb,
-        "host": settings.hostdb,
-        "port": settings.portdb
-    }
-    conexion = psycopg2.connect(**credenciales)
-except psycopg2.Error as e:
-    print("Ocurrió un error al conectar a PostgreSQL: ", e)
 
 class User(BaseModel):
     email: EmailStr 
     password: str
-
-class UserInDB(BaseModel):
+    
+class Persona(BaseModel):
     email: EmailStr
-    hashed_password: str
-    disabled: bool
+    password: str
+    telefono: str
+    nombre: str
+    apellido: str
+class Empresa(BaseModel):
+    email: EmailStr
+    password: str
+    telefono: str
+    nombre: str
 
 def get_password_hash(password):
     return pwd_context.hash(password)
@@ -48,43 +35,79 @@ def get_password_hash(password):
 def is_password_secure(password: str):
     return bool(re.match(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!#%*?&]{8,20}$', password))
 
+def get_verification_code():
+    token = randbytes(10)
+    hashedCode = hashlib.sha256()
+    hashedCode.update(token)
+    verification_code = hashedCode.hexdigest()
+    return verification_code
 
+def send_verification_mail(reciver:str, email:EmailMessage):
+    smtp = smtplib.SMTP_SSL("smtp.gmail.com")
+    smtp.login(configuraciones.mail_sender, configuraciones.mail_password)
+    smtp.sendmail(configuraciones.mail_sender, reciver, email.as_string())
+    smtp.quit()
 
-
-@router.post("/register", tags=["auth"])
-async def register(user: User):
+@router.post("/register/persona", tags=["auth"])
+async def registerPersona(form_data: Annotated[Persona, Depends()]):
     try:
         with conexion.cursor() as cursor:
             # Check if user already exists
-            cursor.execute(f"SELECT * FROM users WHERE email='{user.email}'")
-            user_db = cursor.fetchone()
-            if user_db is not None:
+            user_exist = cursor.execute(f"SELECT usuarioExiste('{form_data.email}')")
+            if user_exist:
                 raise HTTPException(status_code=400, detail="User already registered")
 
             # Check password security
-            if not is_password_secure(user.password):
+            if not is_password_secure(form_data.password):
                 raise HTTPException(status_code=400, detail="Password does not meet the security requirements")
 
             # Hash password and generate verification code
-            hashed_password = get_password_hash(user.password)
-            token = randbytes(10)
-            hashedCode = hashlib.sha256()
-            hashedCode.update(token)
-            verification_code = hashedCode.hexdigest()
-            # Add user to database
-            cursor.execute(f"SELECT insert_user('{user.email}','{hashed_password}',true,'{verification_code}');")
+            hashed_password = get_password_hash(form_data.password)
+            verification_code = get_verification_code()
+            # Add user to databasehttp://localhost:8000/verify-email?token=0c435db496334cb5439c4e576f00360e3c1a0a955b2a8e4f302e80e39b859130
+            cursor.execute(f"SELECT insert_persona('{form_data.email}','{form_data.nombre}','{form_data.telefono}','{hashed_password}',false,'{verification_code}','{form_data.apellido}');")
             conexion.commit()
             
             # Send verification email
             email = EmailMessage()
-            email["From"] = settings.mail_sender
-            email["To"] = user.email
+            email["From"] = configuraciones.mail_sender
+            email["To"] = form_data.email
             email["Subject"] = "Verificacion de cuenta"
-            email.set_content(f"El link de verificacion de su cuenta:localhost:8000/verify-email?token={verification_code}")
-            smtp = smtplib.SMTP_SSL("smtp.gmail.com")
-            smtp.login(settings.mail_sender, settings.mail_password)
-            smtp.sendmail(settings.mail_sender, user.email, email.as_string())
-            smtp.quit()
+            email.set_content(f"El link de verificacion de su cuenta: http://{configuraciones.api_url}:{configuraciones.api_port}/verify-email?token={verification_code}")
+            send_verification_mail(form_data.email, email)
+            return {"Usuario creado con exito, revise su correo para verificar su cuenta"}
+
+    except psycopg2.Error as e:
+        print("Ocurrió un error al conectar a PostgreSQL: ", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@router.post("/register/empresa", tags=["auth"])
+async def registerEmpresa(form_data: Annotated[Empresa, Depends()]):
+    try:
+        with conexion.cursor() as cursor:
+            # Check if user already exists
+            user_exist = cursor.execute(f"SELECT usuarioExiste('{form_data.email}')")
+            if user_exist:
+                raise HTTPException(status_code=400, detail="User already registered")
+
+            # Check password security
+            if not is_password_secure(form_data.password):
+                raise HTTPException(status_code=400, detail="Password does not meet the security requirements")
+
+            # Hash password and generate verification code
+            hashed_password = get_password_hash(form_data.password)
+            verification_code = get_verification_code()
+            # Add user to database
+            cursor.execute(f"SELECT insert_empresa('{form_data.email}','{form_data.nombre}','{form_data.telefono}','{hashed_password}',false,'{verification_code}');")
+            conexion.commit()
+            
+            # Send verification email
+            email = EmailMessage()
+            email["From"] = configuraciones.mail_sender
+            email["To"] = form_data.email
+            email["Subject"] = "Verificacion de cuenta"
+            email.set_content(f"El link de verificacion de su cuenta: http://{configuraciones.api_url}:{configuraciones.api_port}/verify-email?token={verification_code}")
+            send_verification_mail(form_data.email, email)
             return {"Usuario creado con exito, revise su correo para verificar su cuenta"}
 
     except psycopg2.Error as e:
@@ -92,7 +115,8 @@ async def register(user: User):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/verify-email")
+
+@router.get("/verify-email", tags=["auth"])
 async def verify_email(token: str):
     # Buscamos al usuario en la base de datos
     try:

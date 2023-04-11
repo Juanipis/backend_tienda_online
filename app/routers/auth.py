@@ -1,46 +1,15 @@
-from fastapi import APIRouter
-from datetime import datetime, timedelta
-
-from fastapi import Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+
+from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 import psycopg2
-from pydantic import BaseSettings
-from fastapi import APIRouter, Depends, HTTPException
 from typing import Annotated
+from routers.config import conexion, configuraciones
 
 router = APIRouter()
-
-class Settings(BaseSettings):
-    dbname: str
-    userdb: str 
-    passworddb: str
-    hostdb: str 
-    portdb: int 
-    secret_key: str
-    algorithm: str 
-    acces_token_expire_minutes: int 
-    mail_sender: str
-    mail_password: str
-    class Config:
-        env_file = "./env.env"
-
-settings = Settings()
-
-try:
-    credenciales = {
-        "dbname": settings.dbname,
-        "user": settings.userdb,
-        "password": settings.passworddb,
-        "host": settings.hostdb,
-        "port": settings.portdb
-    }
-    conexion = psycopg2.connect(**credenciales)
-except psycopg2.Error as e:
-    print("Ocurrió un error al conectar a PostgreSQL: ", e)
-
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -48,28 +17,19 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 class Token(BaseModel):
     access_token: str
     token_type: str
-
-
 class TokenData(BaseModel):
     username: str | None = None
-
-
 class User(BaseModel):
     email: str | None = None
     disabled: bool | None = None
-
 class UserInDB(User):
     hashed_password: str
-
-
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
-
 def get_password_hash(password):
     return pwd_context.hash(password)
-
 
 def get_user(username: str):
     try:
@@ -102,7 +62,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     else:
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
+    encoded_jwt = jwt.encode(to_encode, configuraciones.secret_key, algorithm=configuraciones.algorithm)
     return encoded_jwt
 
 
@@ -113,7 +73,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        payload = jwt.decode(token, configuraciones.secret_key, algorithms=[configuraciones.algorithm])
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
@@ -141,21 +101,9 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token_expires = timedelta(minutes=settings.acces_token_expire_minutes)
+    access_token_expires = timedelta(minutes=configuraciones.acces_token_expire_minutes)
     access_token = create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
-
-@router.get("/users/me/", response_model=User)
-async def read_users_me(
-    current_user: Annotated[User, Depends(get_current_active_user)]
-):
-    return current_user
-
-@router.get("/users/me/items/")
-async def read_own_items(
-    current_user: Annotated[User, Depends(get_current_active_user)]
-):
-    return [{"item_id": "Foo", "owner": current_user.email}]

@@ -1,1 +1,0 @@
-insert into users(email,hashed_password) values ('johndoe@example.com','$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW');
