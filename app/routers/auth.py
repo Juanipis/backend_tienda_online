@@ -21,24 +21,27 @@ class TokenData(BaseModel):
     username: str | None = None
 class User(BaseModel):
     email: str | None = None
-    disabled: bool | None = None
+    enabled: bool | None = None
 class UserInDB(User):
     hashed_password: str
-
+class Login(BaseModel):
+    email: str
+    password: str
+    
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
 def get_password_hash(password):
     return pwd_context.hash(password)
 
-def get_user(username: str):
+def get_user(email: str):
     try:
         with conexion.cursor() as cursor:
-            cursor.execute(f'select email,hashed_password,disabled from users where email=\'{username}\';')
+            cursor.execute(f'select email,hashed_password,enabled from usuarios where email=\'{email}\';')
             email_db = cursor.fetchone()
             if(email_db != None):
-                print(email_db)
-                return UserInDB(email=email_db[0],hashed_password=email_db[1],disabled=email_db[2])
+
+                return UserInDB(email=email_db[0],hashed_password=email_db[1],enabled=email_db[2])
             else:
                 return None
     except psycopg2.Error as e:
@@ -48,7 +51,7 @@ def get_user(username: str):
 def authenticate_user(username: str, password: str):
     user = get_user(username)
     print(user)
-    if not user:
+    if not user or user.enabled == False:
         return False
     if not verify_password(password, user.hashed_password):
         return False
@@ -93,8 +96,8 @@ async def get_current_active_user( current_user: Annotated[User, Depends(get_cur
 
 #We add the router to the app with the prefix /auth and the tags
 @router.post("/token", response_model=Token,tags=["auth"])
-async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
-    user = authenticate_user(form_data.username, form_data.password)
+async def login_for_access_token(form_data: Annotated[Login, Depends()]):
+    user = authenticate_user(form_data.email, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
