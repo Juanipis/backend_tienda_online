@@ -1,5 +1,8 @@
 from pydantic import BaseSettings
 import psycopg2
+import os
+
+
 
 class Settings(BaseSettings):
     dbname: str
@@ -15,7 +18,7 @@ class Settings(BaseSettings):
     mail_sender: str
     mail_password: str
     class Config:
-        env_file = ".env"
+        env_file = "./app/.env"
 
 configuraciones = Settings()
 

@@ -7,7 +7,7 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 import psycopg2
 from typing import Annotated
-from app.routers.config import conexion, configuraciones
+from app.config import conexion, configuraciones
 
 router = APIRouter()
 
