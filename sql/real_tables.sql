@@ -1,10 +1,10 @@
 create table usuarios(
-	email varchar(50) CHECK (Email LIKE '%_@__%.__%') unique not null primary key,
+	id serial primary key,
+	email varchar(50) CHECK (Email LIKE '%_@__%.__%') unique not null,
 	nombre varchar(50) not null,
 	telefono varchar(20) unique not null,
-	hashed_password varchar(60) not null,
-	enabled bool not null default false,
-	verification_code varchar(64) not null
+	hashed_password varchar(60),
+	enabled bool not null default false
 );
 
 create table empresas(
