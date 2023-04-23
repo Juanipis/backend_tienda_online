@@ -8,10 +8,10 @@ create table usuarios(
 );
 
 create table empresas(
-	primary key (email)
+	primary key (id)
 ) inherits (usuarios);
 
 create table personas(
-	primary key (email),
+	primary key (id),
 	apellido varchar(50) not null
 ) inherits (usuarios);

@@ -4,7 +4,7 @@ from typing import Annotated
 from app.routers.auth import get_current_active_user
 from app.config import conexion, configuraciones
 import psycopg2
-
+  
 class UserInfo(BaseModel):
   email: str
   nombre: str = None

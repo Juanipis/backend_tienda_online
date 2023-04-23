@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     api_port: int
     mail_sender: str
     mail_password: str
+    jwe_key: str
+    register_expiration_time: int
     class Config:
         env_file = "./app/.env"
 
