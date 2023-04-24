@@ -58,3 +58,15 @@ BEGIN
 	END IF;
 END $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION buscar_info_usuario(id integer)
+RETURNS TABLE (email_t varchar(50), nombre_t varchar(50), telefono_t varchar(20), enabled_t bool, apellido_t varchar(50)) AS $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM personas WHERE personas.id = buscar_usuario.id) THEN
+    RETURN QUERY SELECT email, nombre, telefono, enabled, apellido FROM personas WHERE personas.id = buscar_usuario.id;
+  ELSIF EXISTS (SELECT 1 FROM empresas WHERE empresas.id = buscar_usuario.id) THEN
+    RETURN QUERY SELECT email, nombre, telefono, enabled, CAST(NULL AS varchar(50)) AS apellido FROM empresas WHERE empresas.id = buscar_usuario.id;
+  ELSE
+    RAISE EXCEPTION 'No se encontró el usuario con id %', buscar_usuario.id;
+  END IF;
+END;
+$$ LANGUAGE plpgsql;

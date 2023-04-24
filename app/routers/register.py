@@ -110,7 +110,7 @@ async def verify_email(token: str):
         with conexion.cursor() as cursor:
             cursor.execute(f"SELECT insert_usuario('{userInfo['email']}', '{userInfo['nombre']}', '{userInfo['telefono']}', '{userInfo['password']}', true, '{userInfo['apellido']}', {userInfo['person']});")
             conexion.commit()
-        return userInfo
+        return {"Usuario creado con exito"}
     except psycopg2.Error as e:
         print("Ocurrió un error al conectar a PostgreSQL: ", e)
         raise HTTPException(status_code=500, detail="Error al actualizar usuario en la base de datos")
