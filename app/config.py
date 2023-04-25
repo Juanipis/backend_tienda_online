@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     api_port: int
     mail_sender: str
     mail_password: str
+    jwe_key: str
+    register_expiration_time: int
+    mongodb_url: str
     class Config:
         env_file = "./app/.env"
 

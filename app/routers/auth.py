@@ -21,13 +21,11 @@ class TokenData(BaseModel):
     username: str | None = None
 class User(BaseModel):
     email: str | None = None
+    id: int | None = None
     enabled: bool | None = None
 class UserInDB(User):
     hashed_password: str
-class Login(BaseModel):
-    email: str
-    password: str
-    
+
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
@@ -37,20 +35,21 @@ def get_password_hash(password):
 def get_user(email: str):
     try:
         with conexion.cursor() as cursor:
-            cursor.execute(f'select email,hashed_password,enabled from usuarios where email=\'{email}\';')
+            cursor.execute(f'select id,email,hashed_password,enabled from usuarios where email=\'{email}\';')
             email_db = cursor.fetchone()
             if(email_db != None):
 
-                return UserInDB(email=email_db[0],hashed_password=email_db[1],enabled=email_db[2])
+                return UserInDB(id=email_db[0],email=email_db[1],hashed_password=email_db[2],enabled=email_db[3])
             else:
                 return None
     except psycopg2.Error as e:
         print("Ocurrió un error al conectar a PostgreSQL: ", e)
     
 
+
+
 def authenticate_user(username: str, password: str):
     user = get_user(username)
-    print(user)
     if not user or user.enabled == False:
         return False
     if not verify_password(password, user.hashed_password):
@@ -69,37 +68,12 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
-async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, configuraciones.secret_key, algorithms=[configuraciones.algorithm])
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-        token_data = TokenData(username=username)
-    except JWTError:
-        raise credentials_exception
-    user = get_user(email=token_data.username)
-    if user is None:
-        raise credentials_exception
-    return user
 
-
-async def get_current_active_user( current_user: Annotated[User, Depends(get_current_user)]):
-    if current_user.enabled == False:
-        raise HTTPException(status_code=400, detail="Inactive user")
-    return current_user
 
 #We add the router to the app with the prefix /auth and the tags
 @router.post("/token", response_model=Token,tags=["auth"])
 async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
-    print(form_data.username)
-    print(form_data.password)
-    user = authenticate_user(form_data.username, form_data.password)
+    user = authenticate_user(form_data.username, form_data.password) #On oauth2 the username is the email
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -108,7 +82,46 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
         )
     access_token_expires = timedelta(minutes=configuraciones.acces_token_expire_minutes)
     access_token = create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
+        data={"user_id": user.id}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
+
+
+#Functions to get active users
+
+def get_user_by_id(user_id: int):
+    try:
+        with conexion.cursor() as cursor:
+            cursor.execute(f'select id,enabled from usuarios where id={user_id};')
+            user_fetched = cursor.fetchone()
+            if(user_fetched != None):
+                return User(id=user_fetched[0], enabled=user_fetched[1])
+            else:
+                return None
+    except psycopg2.Error as e:
+        print("Ocurrió un error al conectar a PostgreSQL: ", e)
+
+async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, configuraciones.secret_key, algorithms=[configuraciones.algorithm])
+        user_id: str = payload.get("user_id")
+        if user_id is None:
+            raise credentials_exception
+        token_data = TokenData(username=user_id)
+    except JWTError:
+        raise credentials_exception
+    user = get_user_by_id(user_id=token_data.username)
+    if user is None:
+        raise credentials_exception
+    return user
+
+async def get_current_active_user( current_user: Annotated[User, Depends(get_current_user)]):
+    if current_user.enabled == False:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    return current_user
