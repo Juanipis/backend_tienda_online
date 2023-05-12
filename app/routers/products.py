@@ -14,43 +14,37 @@ class ProductInfo(BaseModel):
 
 
 async def connect_db():
+  """
+  connect_db - Connect to the database
+  """
   try:
     return MongoClient(configuraciones.mongodb_url)
   except Exception as e:
     raise HTTPException(status_code=500, detail="Error connecting to the database")
 
-
-
-router = APIRouter()
-
-async def get_product_info_db(product_id:int):
-  dbname = "test1"
-  collection_name = "products"
-  client = await connect_db()
-  db = client[dbname]
-  collection = db[collection_name]
-  product = collection.find_one({"id":product_id})
-  if product:
-    return ProductInfo(id=product["id"],name=product["name"],categories=product["categories"],description=product["description"],image_url=product["image_url"],price_gr=product["price_gr"])
-  else:
-    raise HTTPException(status_code=404, detail="Product not found")
-  
-@router.get("/info_product_id",response_model=ProductInfo, tags=["info_product"])
-async def get_info_product(product_id: int):
-  return await get_product_info_db(product_id)
-
-
-@router.get("/search_product", response_model=List[ProductInfo], tags=["info_product"])
-async def search_product_by_name_and_category(name: Optional[str] = None, categories: Optional[List[int]] = Query(None)):
-    dbname = "test1"
-    collection_name = "products"
+async def get_collection_db(dbname: str, collection_name: str):
+  try:
     client = await connect_db()
     db = client[dbname]
     collection = db[collection_name]
+    return collection
+  except Exception as e:
+    raise HTTPException(status_code=500, detail="Error connecting to the database")
+
+router = APIRouter()
+
+
+@router.get("/search_product", response_model=List[ProductInfo], tags=["info_product"])
+async def search_product(name: Optional[str] = None, categories: Optional[List[int]] = Query(None), product_id: Optional[int] = None):
+  collection = await get_collection_db("test1", "products")
+  products = []
+  if product_id:
+      products = collection.find({"id": product_id})
+  else:
     query = {}
     if name:
         query["name"] = {"$regex": f".*{name}.*", "$options": "i"}
     if categories:
         query["categories"] = {"$in": categories}
     products = collection.find(query)
-    return [ProductInfo(id=product["id"],name=product["name"],categories=product["categories"],description=product["description"],image_url=product["image_url"],price_gr=product["price_gr"]) for product in products]
+  return [ProductInfo(id=product["id"],name=product["name"],categories=product["categories"],description=product["description"],image_url=product["image_url"],price_gr=product["price_gr"]) for product in products]
