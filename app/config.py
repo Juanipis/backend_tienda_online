@@ -1,10 +1,11 @@
 from pydantic import BaseSettings
 import psycopg2
-import os
-
 
 
 class Settings(BaseSettings):
+    """
+    Settings - Clase para obtener las variables de entorno del sistema
+    """
     dbname: str
     userdb: str 
     passworddb: str
@@ -20,19 +21,22 @@ class Settings(BaseSettings):
     jwe_key: str
     register_expiration_time: int
     mongodb_url: str
+    mongodb_name: str
+    mongodb_collection_cart: str
+    mongodb_collection_product: str
     class Config:
         env_file = "./app/.env"
 
-configuraciones = Settings()
+Configuraciones = Settings()
 
 try:
     credenciales = {
-        "dbname": configuraciones.dbname,
-        "user": configuraciones.userdb,
-        "password": configuraciones.passworddb,
-        "host": configuraciones.hostdb,
-        "port": configuraciones.portdb
+        "dbname": Configuraciones.dbname,
+        "user": Configuraciones.userdb,
+        "password": Configuraciones.passworddb,
+        "host": Configuraciones.hostdb,
+        "port": Configuraciones.portdb
     }
-    conexion = psycopg2.connect(**credenciales)
+    ConexionPostgres = psycopg2.connect(**credenciales)
 except psycopg2.Error as e:
     print("Ocurrió un error al conectar a PostgreSQL: ", e)

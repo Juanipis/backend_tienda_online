@@ -1,28 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
 from typing import Annotated
 from app.routers.auth import get_current_active_user
-from app.config import conexion
+from app.config import ConexionPostgres
+from app.models import UserInfo, User
 import psycopg2
 
-class UserInfo(BaseModel):
-  email: str
-  nombre: str
-  telefono: str
-  is_persona: bool
-  enabled: bool
-  apellido: str = None
-  
-class User(BaseModel):
-    email: str | None = None
-    id: int | None = None
-    enabled: bool | None = None
+
 
 router = APIRouter()
 
 async def get_user_info_db(user_id:int):
   try:
-    with conexion.cursor() as cursor:
+    with ConexionPostgres.cursor() as cursor:
       cursor.execute(f'select buscar_usuario({user_id});')
       datosUsuario = list(cursor.fetchone()[0].strip('()').split(','))
       
