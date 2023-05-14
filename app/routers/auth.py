@@ -1,16 +1,26 @@
+# Library for working with dates and times
+from datetime import datetime, timedelta
+# Library for validating email addresses
+from email_validator import validate_email
+# Library for connecting and executing queries with PostgreSQL
+import psycopg2
+# Local modules for configuring the database connection and the environment variables
+from app.config import ConexionPostgres, Configuraciones
+# Library for defining annotated types
+from typing import Annotated
+# Local modules for defining the data models of the application
+from app.models import Token, TokenData, User, UserInDB
+# Library for encrypting and verifying passwords
+from passlib.context import CryptContext
+# Library for encoding and decoding JWT tokens
+from jose import JWTError, jwt
+# Library for creating and managing API routes
 from fastapi import APIRouter, Depends, HTTPException, status
+# Library for implementing authentication with OAuth2
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
-from datetime import datetime, timedelta
-from jose import JWTError, jwt
-from passlib.context import CryptContext
-import psycopg2
-from typing import Annotated
-from app.config import ConexionPostgres, Configuraciones
-from app.models import Token, TokenData, User, UserInDB
 
 router = APIRouter()
-
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -48,12 +58,21 @@ def authenticate_user(username: str, password: str):
   """
 	authenticate_user - Authenticate the user
   """
-  user = get_user(username)
-  if not user or user.enabled == False:
+  try:
+    #First validate the email has the correct format
+    email_valid = validate_email(username)
+    #Then get the user from the database
+    user = get_user(email_valid.normalized)
+    #If the user does not exist or is not enabled, return False
+    if not user or user.enabled == False:
+      return False
+    #If the password is not correct, return False
+    if not verify_password(password, user.hashed_password):
+      return False
+    #If everything is correct, return the user
+    return user
+  except:
     return False
-  if not verify_password(password, user.hashed_password):
-    return False
-  return user
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
@@ -76,6 +95,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 @router.post("/token", response_model=Token,tags=["auth"])
 async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
   user = authenticate_user(form_data.username, form_data.password) #On oauth2 the username is the email
+  
   if not user:
     raise HTTPException(
       status_code=status.HTTP_401_UNAUTHORIZED,

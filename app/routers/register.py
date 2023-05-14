@@ -1,14 +1,26 @@
+# Library for working with dates and times
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException
-from passlib.context import CryptContext
-import re
+# Library for connecting and executing queries with PostgreSQL
 import psycopg2
-import smtplib 
-from email.message import EmailMessage
+# Local module for configuring the database connection and the environment variables
 from app.config import ConexionPostgres, Configuraciones
+# Library for defining annotated types
 from typing import Annotated
-from jose import jwt,jwe
+# Local module for defining the data model of the user registration
 from app.models import UserRegister
+# Library for encrypting and verifying passwords
+from passlib.context import CryptContext
+# Library for encoding and decoding JWT and JWE tokens
+from jose import jwt,jwe
+# Library for creating and managing API routes
+from fastapi import APIRouter, Depends, HTTPException
+# Library for working with regular expressions
+import re
+# Library for sending emails via SMTP protocol
+import smtplib 
+# Library for creating email messages
+from email.message import EmailMessage
+
 
 router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -91,7 +103,7 @@ async def registerPersona(form_data: Annotated[UserRegister, Depends()]):
         print("Ocurrió un error al conectar a PostgreSQL: ", e)
         raise HTTPException(status_code=500, detail="Internal server error")
 
-@router.get("/register/verify-email", tags=["auth"])
+@router.post("/register/verify-email", tags=["auth"])
 async def verify_email(token: str):
     try:
         # 1. Decrypt token

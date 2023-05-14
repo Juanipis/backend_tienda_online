@@ -10,7 +10,6 @@ from typing import List
   - They are used in the API documentation
   - They are used in the tests
 """
-
 # -------------------------------
 """
   Models for manage users and auth

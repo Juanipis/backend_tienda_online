@@ -27,7 +27,7 @@ async def get_user_info_db(user_id:int):
   except psycopg2.Error as e:
     print("Ocurrió un error al conectar a PostgreSQL: ", e)
 
-@router.post("/info_user",response_model=UserInfo, tags=["info_user"])
+@router.get("/info_user",response_model=UserInfo, tags=["info_user"])
 async def get_info_user(current_user: Annotated[User, Depends(get_current_active_user)]):
   if not current_user:
     raise HTTPException(status_code=401, detail="Unauthorized")

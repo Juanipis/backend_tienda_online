@@ -1,13 +1,20 @@
+# Library for creating and managing API routes
 from fastapi import APIRouter, Depends, HTTPException, Query
+# Library for defining annotated types and lists
 from typing import Annotated, List
-from app.routers.auth import get_current_active_user
-from app.routers.user import User
-from app.mongodb import get_collection_db
+# Local module for configuring the environment variables
 from app.config import Configuraciones
+# Local module for getting the current active user from the authentication
+from app.routers.auth import get_current_active_user
+# Local module for defining the data model of the user
+from app.routers.user import User
+# Local module for getting the MongoDB collection from the database
+from app.mongodb import get_collection_db
+# Local module for defining the data models of the cart and the product list
 from app.models import Cart, ProductList
+
+
 router = APIRouter()
-
-
 
 # To get the cart of a user
 @router.get("/cart",response_model=Cart, tags=["cart"])
