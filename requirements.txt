@@ -9,3 +9,4 @@ pydantic[dotenv]
 python-multipart
 pydantic[email]
 pymongo[srv]
+bcrypt

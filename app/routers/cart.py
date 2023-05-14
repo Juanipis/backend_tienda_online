@@ -1,16 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Annotated, List
 from app.routers.auth import get_current_active_user
 from app.routers.user import User
 from app.mongodb import get_collection_db
 from app.config import Configuraciones
-from app.models import Product, Cart
+from app.models import Product, Cart, ProductList
 router = APIRouter()
 
 
 
 # To get the cart of a user
-@router.post("/cart",response_model=Cart, tags=["cart"])
+@router.get("/cart",response_model=Cart, tags=["cart"])
 async def get_user_cart(current_user: Annotated[User, Depends(get_current_active_user)]):
   """
   get_user_cart - Get the cart of a user
@@ -24,7 +24,7 @@ async def get_user_cart(current_user: Annotated[User, Depends(get_current_active
 
 # To add a product to the cart of a user
 @router.post("/cart/add", tags=["cart"])
-async def add_product_to_cart(current_user: Annotated[User, Depends(get_current_active_user)], products: List[Product]):
+async def add_product_to_cart(current_user: Annotated[User, Depends(get_current_active_user)], products: ProductList):
   """
   add_product_to_cart - Add a product to the cart of a user
   """
@@ -57,3 +57,25 @@ async def add_product_to_cart(current_user: Annotated[User, Depends(get_current_
       #Create the cart
       collection.insert_one({"user_id": current_user.id, "products": products_dict})
     return {"message": "Product added to cart successfully"}
+
+# To delete a product from the cart of a user
+@router.delete("/cart/delete", tags=["cart"])
+async def delete_product_from_cart(current_user: Annotated[User, Depends(get_current_active_user)], products_cart_id: List[int]):
+  """
+  delete_product_from_cart - Delete a product from the cart of a user
+  """
+  #If the user is not logged in, raise an exception
+  if not current_user:
+    raise HTTPException(status_code=401, detail="Unauthorized")
+  else:
+    #Get the cart of the user
+    collection = await get_collection_db(Configuraciones.mongodb_name, Configuraciones.mongodb_collection_cart)
+    cart = collection.find_one({"user_id": current_user.id})
+    #Check if the user has a cart, if not, raise an exception
+    if cart:
+      #Check if the products are in the cart, if so, delete them
+      for product_cart_id in products_cart_id:
+        collection.update_one({"user_id": current_user.id}, {"$pull": {"products": {"product_id": product_cart_id}}})
+      return {"message": "Product deleted from cart successfully"}
+    else:
+      raise HTTPException(status_code=404, detail="Cart not found")

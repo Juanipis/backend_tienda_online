@@ -1,5 +1,6 @@
 
 from pydantic import BaseModel, EmailStr
+from typing import List
 """
   Models - Models for the API
   - They are used to validate the data that is sent to the API and to return the data in the responses
@@ -85,6 +86,12 @@ class Product(BaseModel):
   """
   product_id: int
   quantity: int
+
+class ProductList(BaseModel):
+  """
+  ProductList - Product list model
+  """
+  products: List[Product]
 
 class ProductInfo(BaseModel):
   """
