@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     mongodb_collection_cart: str
     mongodb_collection_product: str
     class Config:
-        env_file = "./app/.env"
+        env_file = ".env"
 
 Configuraciones = Settings()
 

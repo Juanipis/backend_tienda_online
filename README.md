@@ -8,6 +8,7 @@ _Backend necesario para una tienda online_
 ### Construido con 🛠
 * [Python Alpine 3.17 🐍](https://hub.docker.com/_/python)
 * [Postgres 🐘](https://hub.docker.com/_/postgres)
+* [MongoDB 🍃](https://hub.docker.com/_/mongo)
 
 #### Librerías 📚
 * [FastAPI ⚡](https://fastapi.tiangolo.com/)
@@ -15,7 +16,7 @@ _Backend necesario para una tienda online_
 * [Uvicorn 🦄](https://www.uvicorn.org/)
 
 #### Despliegue 🔌
-En la carpeta raíz es necesario un archivo tres archivos distintos .env que contenga las siguientes variables de entorno:
+En la carpeta raíz es necesario un archivo de variable de entorno en la raíz del proyecto .env que contenga las siguientes variables de entorno:
 ```
 dbname=
 userdb=
@@ -29,9 +30,17 @@ api_url=
 api_port=
 mail_sender=
 mail_password=
+jwe_key=
+register_expiration_time=
+mongodb_url=
+mongodb_name=
+mongodb_collection_cart=
+mongodb_collection_product=
 ```
+Para ejecutar el código
 ```
-uvicorn app.main:app --reload --ssl-keyfile "ruta.pem" --ssl-certfile "ruta.pem"
+uvicorn app.main:app 
 ```
+
 #### Autores ✏
 👨‍💻 Juan Pablo Díaz Correa - [@Juanipis](https://github.com/Juanipis) - juanipis@gmail.com
