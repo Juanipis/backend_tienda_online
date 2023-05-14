@@ -4,7 +4,7 @@ from app.routers.auth import get_current_active_user
 from app.routers.user import User
 from app.mongodb import get_collection_db
 from app.config import Configuraciones
-from app.models import Product, Cart, ProductList
+from app.models import Cart, ProductList
 router = APIRouter()
 
 
