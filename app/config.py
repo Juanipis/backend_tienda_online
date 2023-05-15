@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     MAIL_SENDER: str
     MAIL_PASSWORD: str
     JWE_KEY: str
-    REGISTER_EXPIRATION_TIME: int
+    REGISTER_EXPIRATION_TIME=3
     MONGODB_URL: str
     MONGODB_NAME: str
     MONGODB_COLLECTION_CART: str
