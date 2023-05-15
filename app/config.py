@@ -10,12 +10,12 @@ class Settings(BaseSettings):
     USER_DB: str 
     PASSWORD_DB: str
     HOST_DB: str 
-    PORT_DB: int 
+    PORT_DB=5432
     SECRET_KEY: str
     ALGORITHM: str 
-    ACCESS_TOKEN_EXPIRATION_TIME: int 
+    ACCESS_TOKEN_EXPIRATION_TIME= 30 
     API_URL: str
-    API_PORT: int
+    API_PORT=80
     MAIL_SENDER: str
     MAIL_PASSWORD: str
     JWE_KEY: str
