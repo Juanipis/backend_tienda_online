@@ -6,24 +6,24 @@ class Settings(BaseSettings):
     """
     Settings - Clase para obtener las variables de entorno del sistema
     """
-    dbname: str
-    userdb: str 
-    passworddb: str
-    hostdb: str 
-    portdb: int 
-    secret_key: str
-    algorithm: str 
-    acces_token_expire_minutes: int 
-    api_url: str
-    api_port: int
-    mail_sender: str
-    mail_password: str
-    jwe_key: str
-    register_expiration_time: int
-    mongodb_url: str
-    mongodb_name: str
-    mongodb_collection_cart: str
-    mongodb_collection_product: str
+    DB_NAME: str
+    USER_DB: str 
+    PASSWORD_DB: str
+    HOST_DB: str 
+    PORT_DB: int 
+    SECRET_KEY: str
+    ALGORITHM: str 
+    ACCESS_TOKEN_EXPIRATION_TIME: int 
+    API_URL: str
+    API_PORT: int
+    MAIL_SENDER: str
+    MAIL_PASSWORD: str
+    JWE_KEY: str
+    REGISTER_EXPIRATION_TIME: int
+    MONGODB_URL: str
+    MONGODB_NAME: str
+    MONGODB_COLLECTION_CART: str
+    MONGODB_COLLECTION_PRODUCT: str
     class Config:
         env_file = ".env"
 
@@ -31,11 +31,11 @@ Configuraciones = Settings()
 
 try:
     credenciales = {
-        "dbname": Configuraciones.dbname,
-        "user": Configuraciones.userdb,
-        "password": Configuraciones.passworddb,
-        "host": Configuraciones.hostdb,
-        "port": Configuraciones.portdb
+        "dbname": Configuraciones.DB_NAME,
+        "user": Configuraciones.USER_DB,
+        "password": Configuraciones.PASSWORD_DB,
+        "host": Configuraciones.HOST_DB,
+        "port": Configuraciones.PORT_DB
     }
     ConexionPostgres = psycopg2.connect(**credenciales)
 except psycopg2.Error as e:

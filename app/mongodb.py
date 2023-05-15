@@ -7,7 +7,7 @@ async def connect_db():
   connect_db - Connect to the database
   """
   try:
-    return MongoClient(Configuraciones.mongodb_url)
+    return MongoClient(Configuraciones.MONGODB_URL)
   except Exception as e:
     raise HTTPException(status_code=500, detail="Error connecting to the database")
 

@@ -9,43 +9,43 @@ RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 COPY ./app /code/app
 
 # Use ARG for build-time variables and ENV for run-time variables
-ARG dbname
-ARG userdb
-ARG passworddb
-ARG hostdb
-ARG portdb
-ARG secret_key
-ARG algorithm
-ARG acces_token_expire_minutes
-ARG api_url
-ARG api_port
-ARG mail_sender
-ARG mail_password
-ARG jwe_key
-ARG register_expiration_time
-ARG mongodb_url
-ARG mongodb_name
-ARG mongodb_collection_cart
-ARG mongodb_collection_product
+ARG DB_NAME
+ARG USER_DB
+ARG PASSWORD_DB
+ARG HOST_DB
+ARG PORT_DB
+ARG SECRET_KEY
+ARG ALGORITHM
+ARG ACCESS_TOKEN_EXPIRATION_TIME
+ARG API_URL
+ARG API_PORT
+ARG MAIL_SENDER
+ARG MAIL_PASSWORD
+ARG JWE_KEY
+ARG REGISTER_EXPIRATION_TIME
+ARG MONGODB_URL
+ARG MONGODB_NAME
+ARG MONGODB_COLLECTION_CART
+ARG MONGODB_COLLECTION_PRODUCT
 
-ENV dbname=$dbname \
-    userdb=$userdb \
-    passworddb=$passworddb \
-    hostdb=$hostdb \
-    portdb=$portdb \
-    secret_key=$secret_key \
-    algorithm=$algorithm \
-    acces_token_expire_minutes=$acces_token_expire_minutes \
-    api_url=$api_url \
-    api_port=$api_port \
-    mail_sender=$mail_sender \
-    mail_password=$mail_password \
-    jwe_key=$jwe_key \
-    register_expiration_time=$register_expiration_time \
-    mongodb_url=$mongodb_url \
-    mongodb_name=$mongodb_name \
-    mongodb_collection_cart=$mongodb_collection_cart \
-    mongodb_collection_product=$mongodb_collection_product
+ENV DB_NAME=$DB_NAME \
+    USER_DB=$USER_DB \
+    PASSWORD_DB=$PASSWORD_DB \
+    HOST_DB=$HOST_DB \
+    PORT_DB=$PORT_DB \
+    SECRET_KEY=$SECRET_KEY \
+    ALGORITHM=$ALGORITHM \
+    ACCESS_TOKEN_EXPIRATION_TIME=$ACCESS_TOKEN_EXPIRATION_TIME \
+    API_URL=$API_URL \
+    API_PORT=$API_PORT \
+    MAIL_SENDER=$MAIL_SENDER \
+    MAIL_PASSWORD=$MAIL_PASSWORD \
+    JWE_KEY=$JWE_KEY \
+    REGISTER_EXPIRATION_TIME=$REGISTER_EXPIRATION_TIME \
+    MONGODB_URL=$MONGODB_URL \
+    MONGODB_NAME=$MONGODB_NAME \
+    MONGODB_COLLECTION_CART=$MONGODB_COLLECTION_CART \
+    MONGODB_COLLECTION_PRODUCT=$MONGODB_COLLECTION_PRODUCT
 
 # Write the env variables to a .env file in the app directory
 

@@ -34,17 +34,17 @@ def create_register_token(data: dict, expires_delta: timedelta | None = None):
     else:
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, Configuraciones.secret_key, algorithm=Configuraciones.algorithm)
+    encoded_jwt = jwt.encode(to_encode, Configuraciones.SECRET_KEY, algorithm=Configuraciones.ALGORITHM)
     return encoded_jwt
 
 
 def encrypt_register_token(token: str):
-    encrypted = jwe.encrypt(token, Configuraciones.jwe_key, algorithm='dir', encryption='A128GCM')
+    encrypted = jwe.encrypt(token, Configuraciones.JWE_KEY, algorithm='dir', encryption='A128GCM')
     return encrypted
 
 def decrypt_register_token(token: str):
     try:
-        decrypted = jwe.decrypt(token, Configuraciones.jwe_key)
+        decrypted = jwe.decrypt(token, Configuraciones.JWE_KEY)
         return decrypted
     except:
         raise HTTPException(status_code=400, detail="Token invalido")
@@ -60,8 +60,8 @@ def is_password_secure(password: str):
 
 def send_verification_mail(reciver:str, email:EmailMessage):
     smtp = smtplib.SMTP_SSL("smtp.gmail.com")
-    smtp.login(Configuraciones.mail_sender, Configuraciones.mail_password)
-    smtp.sendmail(Configuraciones.mail_sender, reciver, email.as_string())
+    smtp.login(Configuraciones.MAIL_SENDER, Configuraciones.MAIL_PASSWORD)
+    smtp.sendmail(Configuraciones.MAIL_SENDER, reciver, email.as_string())
     smtp.quit()
 
 @router.post("/register", tags=["auth"])
@@ -82,7 +82,7 @@ async def registerPersona(form_data: Annotated[UserRegister, Depends()]):
                     raise HTTPException(status_code=400, detail="Apellido is required")
             # Create jwe token with user data and send it to user email
             # 1. Create expiration time for token
-            access_token_expires = timedelta(minutes=Configuraciones.register_expiration_time)
+            access_token_expires = timedelta(minutes=Configuraciones.REGISTER_EXPIRATION_TIME)
             # 2. Hash password
             form_data.password = get_password_hash(form_data.password)
             print(form_data)
@@ -95,7 +95,7 @@ async def registerPersona(form_data: Annotated[UserRegister, Depends()]):
             email["From"] = Configuraciones.mail_sender
             email["To"] = form_data.email
             email["Subject"] = "Verificacion de cuenta"
-            email.set_content(f"El link de verificacion de su cuenta: https://{Configuraciones.api_url}:{Configuraciones.api_port}/register/verify-email?token={encrypt_token.decode()}")
+            email.set_content(f"El link de verificacion de su cuenta: https://{Configuraciones.API_URL}:{Configuraciones.API_PORT}/register/verify-email?token={encrypt_token.decode()}")
             send_verification_mail(form_data.email, email)
             return {"Usuario creado con exito, revise su correo para verificar su cuenta"}
 
@@ -109,7 +109,7 @@ async def verify_email(token: str):
         # 1. Decrypt token
         token_jwt = decrypt_register_token(token)
         # 2. Decode token
-        userInfo = jwt.decode(token_jwt, Configuraciones.secret_key, algorithms=[Configuraciones.algorithm])
+        userInfo = jwt.decode(token_jwt, Configuraciones.SECRET_KEY, algorithms=[Configuraciones.ALGORITHM])
         # 3. Create user in database
         with ConexionPostgres.cursor() as cursor:
             cursor.execute(f"SELECT insert_usuario('{userInfo['email']}', '{userInfo['nombre']}', '{userInfo['telefono']}', '{userInfo['password']}', true, '{userInfo['apellido']}', {userInfo['person']});")

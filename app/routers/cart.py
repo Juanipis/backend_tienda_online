@@ -25,7 +25,7 @@ async def get_user_cart(current_user: Annotated[User, Depends(get_current_active
   if not current_user:
     raise HTTPException(status_code=401, detail="Unauthorized")
   else:
-    collection = await get_collection_db(Configuraciones.mongodb_name, Configuraciones.mongodb_collection_cart)
+    collection = await get_collection_db(Configuraciones.MONGODB_NAME, Configuraciones.MONGODB_COLLECTION_CART)
     cart = collection.find_one({"user_id": current_user.id})
     return Cart(user_id=cart["user_id"],products=cart["products"])
 
@@ -43,7 +43,7 @@ async def add_product_to_cart(current_user: Annotated[User, Depends(get_current_
     products_dict = [product.dict() for product in products]  # Convertir a lista de diccionarios
     
     #Check if the products exist and if the quantity is greater than 0
-    collection = await get_collection_db(Configuraciones.mongodb_name, Configuraciones.mongodb_collection)
+    collection = await get_collection_db(Configuraciones.MONGODB_NAME, Configuraciones.MONGODB_COLLECTION_PRODUCT)
     for product in products_dict:
       product_id = product["product_id"]
       quantity = product["quantity"]
@@ -54,7 +54,7 @@ async def add_product_to_cart(current_user: Annotated[User, Depends(get_current_
         raise HTTPException(status_code=400, detail=f"Quantity for product with id {product_id} must be greater than 0")
 
     #Get the cart of the user
-    collection = await get_collection_db(Configuraciones.mongodb_name, Configuraciones.mongodb_collection_cart)
+    collection = await get_collection_db(Configuraciones.MONGODB_NAME, Configuraciones.MONGODB_COLLECTION_CART)
     cart = collection.find_one({"user_id": current_user.id})
     #Check if the user has a cart, if not, create one
     if cart:
@@ -76,7 +76,7 @@ async def delete_product_from_cart(current_user: Annotated[User, Depends(get_cur
     raise HTTPException(status_code=401, detail="Unauthorized")
   else:
     #Get the cart of the user
-    collection = await get_collection_db(Configuraciones.mongodb_name, Configuraciones.mongodb_collection_cart)
+    collection = await get_collection_db(Configuraciones.MONGODB_NAME, Configuraciones.MONGODB_COLLECTION_CART)
     cart = collection.find_one({"user_id": current_user.id})
     #Check if the user has a cart, if not, raise an exception
     if cart:

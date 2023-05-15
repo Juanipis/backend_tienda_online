@@ -9,7 +9,7 @@ router = APIRouter()
 
 @router.get("/search_product", response_model=List[ProductInfo], tags=["info_product"])
 async def search_product(name: Optional[str] = None, categories: Optional[List[int]] = Query(None), product_id: Optional[int] = None):
-  collection = await get_collection_db(Configuraciones.mongodb_name, Configuraciones.mongodb_collection_product)
+  collection = await get_collection_db(Configuraciones.MONGODB_NAME, Configuraciones.MONGODB_COLLECTION_PRODUCT)
   products = []
   if product_id:
       products = collection.find({"id": product_id})
