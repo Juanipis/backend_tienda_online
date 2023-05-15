@@ -13,4 +13,4 @@ app.include_router(products.router)
 app.include_router(cart.router)
 @app.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "Hola mundo en azureeee"}
