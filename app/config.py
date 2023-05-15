@@ -10,16 +10,16 @@ class Settings(BaseSettings):
     USER_DB: str 
     PASSWORD_DB: str
     HOST_DB: str 
-    PORT_DB=5432
+    PORT_DB:int=5432
     SECRET_KEY: str
     ALGORITHM: str 
-    ACCESS_TOKEN_EXPIRATION_TIME= 30 
+    ACCESS_TOKEN_EXPIRATION_TIME:int=30 
     API_URL: str
-    API_PORT=80
+    API_PORT:int=80
     MAIL_SENDER: str
     MAIL_PASSWORD: str
     JWE_KEY: str
-    REGISTER_EXPIRATION_TIME=3
+    REGISTER_EXPIRATION_TIME:int=3
     MONGODB_URL: str
     MONGODB_NAME: str
     MONGODB_COLLECTION_CART: str
