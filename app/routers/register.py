@@ -34,12 +34,12 @@ def create_register_token(data: dict, expires_delta: timedelta | None = None):
     else:
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, Configuraciones.SECRET_KEY, algorithm=Configuraciones.ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, key=Configuraciones.SECRET_KEY, algorithm=Configuraciones.ALGORITHM)
     return encoded_jwt
 
 
-def encrypt_register_token(token: str):
-    encrypted = jwe.encrypt(token, Configuraciones.JWE_KEY, algorithm='dir', encryption='A128GCM')
+def encrypt_register_token(token: str): #key=Configuraciones.JWE_KEY
+    encrypted = jwe.encrypt(token, key=f"{Configuraciones.JWE_KEY}", algorithm='dir', encryption='A128GCM')
     return encrypted
 
 def decrypt_register_token(token: str):
@@ -92,7 +92,7 @@ async def registerPersona(form_data: Annotated[UserRegister, Depends()]):
             encrypt_token = encrypt_register_token(register_token)
             #5. Send verification email
             email = EmailMessage()
-            email["From"] = Configuraciones.mail_sender
+            email["From"] = Configuraciones.MAIL_SENDER
             email["To"] = form_data.email
             email["Subject"] = "Verificacion de cuenta"
             email.set_content(f"El link de verificacion de su cuenta: https://{Configuraciones.API_URL}:{Configuraciones.API_PORT}/register/verify-email?token={encrypt_token.decode()}")

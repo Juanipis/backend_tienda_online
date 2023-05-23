@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     ALGORITHM: str 
     ACCESS_TOKEN_EXPIRATION_TIME:int=30 
     API_URL: str
-    API_PORT:int=80
+    API_PORT:int=443
     MAIL_SENDER: str
     MAIL_PASSWORD: str
     JWE_KEY: str
