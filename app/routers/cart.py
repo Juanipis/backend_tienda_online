@@ -27,6 +27,10 @@ async def get_user_cart(current_user: Annotated[User, Depends(get_current_active
   else:
     collection = await get_collection_db(Configuraciones.MONGODB_NAME, Configuraciones.MONGODB_COLLECTION_CART)
     cart = collection.find_one({"user_id": current_user.id})
+    #If the user does not have a cart, create one and return it
+    if not cart:
+      collection.insert_one({"user_id": current_user.id, "products": []})
+      cart = collection.find_one({"user_id": current_user.id})
     return Cart(user_id=cart["user_id"],products=cart["products"])
 
 # To add a product to the cart of a user
@@ -40,7 +44,7 @@ async def add_product_to_cart(current_user: Annotated[User, Depends(get_current_
     raise HTTPException(status_code=401, detail="Unauthorized")
   else:
     #Convert the list of products to a list of dictionaries
-    products_dict = [product.dict() for product in products]  # Convertir a lista de diccionarios
+    products_dict = products.dict()["products"]
     
     #Check if the products exist and if the quantity is greater than 0
     collection = await get_collection_db(Configuraciones.MONGODB_NAME, Configuraciones.MONGODB_COLLECTION_PRODUCT)
