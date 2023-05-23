@@ -103,7 +103,7 @@ async def registerPersona(form_data: Annotated[UserRegister, Depends()]):
         print("Ocurrió un error al conectar a PostgreSQL: ", e)
         raise HTTPException(status_code=500, detail="Internal server error")
 
-@router.post("/register/verify-email", tags=["auth"])
+@router.get("/register/verify-email", tags=["auth"])
 async def verify_email(token: str):
     try:
         # 1. Decrypt token
