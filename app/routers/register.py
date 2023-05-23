@@ -95,7 +95,7 @@ async def registerPersona(form_data: Annotated[UserRegister, Depends()]):
             email["From"] = Configuraciones.MAIL_SENDER
             email["To"] = form_data.email
             email["Subject"] = "Verificacion de cuenta"
-            email.set_content(f"El link de verificacion de su cuenta: https://{Configuraciones.API_URL}:{Configuraciones.API_PORT}/register/verify-email?token={encrypt_token.decode()}")
+            email.set_content(f"El link de verificacion de su cuenta: https://{Configuraciones.API_URL}/register/verify-email?token={encrypt_token.decode()}")
             send_verification_mail(form_data.email, email)
             return {"Usuario creado con exito, revise su correo para verificar su cuenta"}
 
