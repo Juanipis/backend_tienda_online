@@ -1,0 +1,33 @@
+services:
+
+  backend:
+    image: juanipis/backostgres
+    container_name: backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+    env_file:
+      - ./backendVars.env
+
+  postgres:
+    container_name: postgres
+    image: postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    env_file:
+      - ./postgresVars.env
+    volumes:
+      - ./sql/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
+      - ./sql/fill_tables.sql:/docker-entrypoint-initdb.d/fill_tables.sql
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    env_file:
+      - ./pgadminVars.env
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
